@@ -1,29 +1,30 @@
 import { useState } from "react";
-import "../styles/Login.css";
+import { useNavigate } from "react-router-dom";
+import "../styles/Auth.css";
 
 export default function Login() {
-  const [username, setUsername] = useState("");
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [focused, setFocused] = useState<string | null>(null);
+  const [focused, setFocused] = useState(null);
 
   const handleLogin = () => {
-    console.log({ username, email, password });
+    console.log({ email, password });
   };
 
   return (
-    <div className="login-page">
+    <div className="auth-page">
       <div className="bg-blob bg-blob--teal" />
       <div className="bg-blob bg-blob--amber" />
 
-      <header className="login-header">
+      <header className="auth-header">
         <div className="logo">
           Eat<span className="logo__accent">out!</span>
         </div>
-        <div className="sign-in-pill">Sign In</div>
+        <div className="auth-dot">Log in</div>
       </header>
 
-      <main className="login-main">
+      <main className="auth-main">
         <div className="avatar">
           <svg
             viewBox="0 0 48 48"
@@ -44,20 +45,12 @@ export default function Login() {
 
         <h1 className="welcome-title">Welcome back</h1>
         <p className="welcome-sub">
-          Sign in to continue your dining journey
+          Log in to continue your dining journey
           <span className="amber-dot" />
         </p>
 
-        <div className="login-form">
+        <div className="auth-form">
           {[
-            {
-              id: "username",
-              label: "Username",
-              type: "text",
-              placeholder: "your username",
-              value: username,
-              onChange: setUsername,
-            },
             {
               id: "email",
               label: "Email",
@@ -94,13 +87,15 @@ export default function Login() {
             </div>
           ))}
 
-          <button className="login-btn" onClick={handleLogin}>
-            Log In
+          <button className="auth-btn" onClick={handleLogin}>
+            Log in
           </button>
         </div>
 
         <div className="footer-links">
-          <a className="footer-link">Create account</a>
+          <a className="footer-link" onClick={() => navigate("/signup")}>
+            Don't have an account? Sign Up
+          </a>
         </div>
       </main>
     </div>
