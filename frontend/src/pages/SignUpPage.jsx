@@ -6,10 +6,9 @@ export default function SignUp() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [focused, setFocused] = useState<string | null>(null);
+  const [focused, setFocused] = useState(null);
 
   const handleSignUp = () => {
-    // console.log({ username, email, password });
     console.log({ email, password });
   };
 
