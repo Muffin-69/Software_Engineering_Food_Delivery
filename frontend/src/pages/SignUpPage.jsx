@@ -1,15 +1,34 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Auth.css";
+import { useAuth } from "../context/AuthContext";
+
+const ROLES = ["customer", "restaurant", "admin"];
 
 export default function SignUp() {
   const navigate = useNavigate();
+  const { register, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("customer");
   const [focused, setFocused] = useState(null);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
 
-  const handleSignUp = () => {
-    console.log({ email, password });
+  const handleSignUp = async () => {
+    setError("");
+    if (!email || !password) {
+      setError("Please fill in all fields.");
+      return;
+    }
+
+    try {
+      await register(email, password, role);
+      setSuccess(true);
+      setTimeout(() => navigate("/login"), 1500);
+    } catch (err) {
+      setError(err.message || "Registration failed. Please try again.");
+    }
   };
 
   return (
@@ -49,6 +68,18 @@ export default function SignUp() {
           <span className="amber-dot" />
         </p>
 
+        {error && (
+          <div className="auth-error" role="alert">
+            {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="auth-success" role="status">
+            Account created! Redirecting to login…
+          </div>
+        )}
+
         <div className="auth-form">
           {[
             {
@@ -83,12 +114,35 @@ export default function SignUp() {
                 className={`field-input ${
                   focused === id ? "field-input--focused" : ""
                 }`}
+                onKeyDown={(e) => e.key === "Enter" && handleSignUp()}
               />
             </div>
           ))}
 
-          <button className="auth-btn" onClick={handleSignUp}>
-            Sign Up
+          <div className="field-group">
+            <label htmlFor="role" className="field-label">
+              Role
+            </label>
+            <select
+              id="role"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              className="field-input field-select"
+            >
+              {ROLES.map((r) => (
+                <option key={r} value={r}>
+                  {r.charAt(0).toUpperCase() + r.slice(1)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <button
+            className="auth-btn"
+            onClick={handleSignUp}
+            disabled={loading || success}
+          >
+            {loading ? "Creating account…" : "Sign Up"}
           </button>
         </div>
 

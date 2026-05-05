@@ -1,16 +1,32 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Auth.css";
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
   const navigate = useNavigate();
+  const { login, loading, error } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [focused, setFocused] = useState(null);
+  const [localError, setLocalError] = useState("");
 
-  const handleLogin = () => {
-    console.log({ email, password });
+  const handleLogin = async () => {
+    setLocalError("");
+    if (!email || !password) {
+      setLocalError("Please fill in all fields.");
+      return;
+    }
+
+    try {
+      await login(email, password);
+      navigate("/dashboard");
+    } catch (err) {
+      setLocalError(err.message || "Login failed. Please try again.");
+    }
   };
+
+  const displayError = localError || error;
 
   return (
     <div className="auth-page">
@@ -49,6 +65,12 @@ export default function Login() {
           <span className="amber-dot" />
         </p>
 
+        {displayError && (
+          <div className="auth-error" role="alert">
+            {displayError}
+          </div>
+        )}
+
         <div className="auth-form">
           {[
             {
@@ -83,12 +105,13 @@ export default function Login() {
                 className={`field-input ${
                   focused === id ? "field-input--focused" : ""
                 }`}
+                onKeyDown={(e) => e.key === "Enter" && handleLogin()}
               />
             </div>
           ))}
 
-          <button className="auth-btn" onClick={handleLogin}>
-            Log in
+          <button className="auth-btn" onClick={handleLogin} disabled={loading}>
+            {loading ? "Logging in…" : "Log in"}
           </button>
         </div>
 
