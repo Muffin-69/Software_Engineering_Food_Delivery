@@ -9,7 +9,7 @@ import {
   updateDish,
   deleteDish,
 } from "../data/restaurantApi";
-import { resetRestaurantsToSeed, type Restaurant } from "../data/restaurants";
+import { type Restaurant } from "../data/restaurants";
 
 /* ──────────────────────────────────────────────────────────────
    Owner / Restaurant menu editor
@@ -195,17 +195,6 @@ export default function OwnerMenuEditPage({
     } finally {
       setAddingDish(false);
     }
-  };
-
-  const handleResetAll = () => {
-    const ok = window.confirm(
-      "Reset all restaurants and menus back to the default seed data?\n\n" +
-        "This wipes every owner edit you've made (across every restaurant) " +
-        "and cannot be undone."
-    );
-    if (!ok) return;
-    resetRestaurantsToSeed();
-    reloadAll();
   };
 
   const setDraftField = (
@@ -464,19 +453,9 @@ export default function OwnerMenuEditPage({
               </div>
             </section>
 
-            {/* ── Reset section — hidden when locked to a single restaurant ── */}
-            {fixedRestaurantId === undefined && (
-              <section className="owner-section owner-danger">
-                <h2 className="owner-section-title">Reset</h2>
-                <p className="owner-hint" style={{ marginBottom: 10 }}>
-                  Wipe all owner edits across every restaurant and restore the
-                  original seed data.
-                </p>
-                <button className="owner-danger-btn" onClick={handleResetAll}>
-                  Reset all menus to defaults
-                </button>
-              </section>
-            )}
+            {/* The "reset to seed" button used to live here, but
+                now that data lives in Supabase the equivalent is
+                running `npm run seed` from the supabase/ folder. */}
           </>
         )}
       </div>

@@ -1,11 +1,9 @@
 """
-Auth service — backed by Supabase.
+Auth service — Supabase-backed.
 
-Passwords are hashed with bcrypt and stored in the public `users`
-table's `password_hash` column. Note: in production you'd usually
-prefer Supabase Auth (the auth.users table) over rolling your own.
-This stays close to the original JSON-based design so the rest of
-the app keeps the same shape.
+Passwords are bcrypt-hashed and stored in the public users table.
+For "restaurant" role accounts we also create the restaurant
+entity they will manage and link it via users.restaurant_id.
 """
 
 import bcrypt
@@ -21,15 +19,13 @@ def verify_password(password: str, hashed: str) -> bool:
 
 
 def _strip_password(user: dict) -> dict:
-    """Never return the password hash to API callers."""
-    user = dict(user)  # shallow copy
+    user = dict(user)
     user.pop("password_hash", None)
     return user
 
 
 def register_user(user):
-    # Reject duplicate emails before insert — gives a clean error
-    # without relying on the DB unique-constraint exception path.
+    # Reject duplicates
     existing = (
         supabase.table("users")
         .select("id")
@@ -40,11 +36,36 @@ def register_user(user):
     if existing.data:
         return None
 
+    # For restaurant accounts, create the restaurant first so we
+    # can link it on the user row.
+    restaurant_id = None
+    if user.role == "restaurant":
+        if not user.restaurant_name or not user.restaurant_name.strip():
+            return None
+        new_restaurant = (
+            supabase.table("restaurants")
+            .insert(
+                {
+                    "name": user.restaurant_name.strip(),
+                    "description": "",
+                    "rating": 0,
+                    "tags": [],
+                }
+            )
+            .execute()
+        )
+        if not new_restaurant.data:
+            return None
+        restaurant_id = new_restaurant.data[0]["id"]
+
     payload = {
         "email": user.email,
         "password_hash": hash_password(user.password),
         "role": user.role,
     }
+    if restaurant_id is not None:
+        payload["restaurant_id"] = restaurant_id
+
     result = supabase.table("users").insert(payload).execute()
     if not result.data:
         return None

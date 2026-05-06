@@ -3,23 +3,22 @@ import "../styles/Dashboard.css";
 import "../styles/Restaurant.css";
 import "../styles/Cart.css";
 import type { Restaurant } from "../data/restaurants";
+import { placeOrder } from "../data/restaurantApi";
 
 /* ──────────────────────────────────────────────────────────────
    Cart / Checkout page
 
-   Lets the user review the items they picked from a restaurant,
-   adjust quantities, choose a payment method, and place the order.
-
-   Backend isn't wired up yet — onPlaceOrder is what the parent
-   (App.tsx) does with the order: in production it would POST to
-   /orders; for now it just generates a fake order id and routes
-   the user to the confirmation screen.
+   Calls the backend's POST /orders endpoint to actually create
+   the order in Supabase. The returned order's real id is then
+   passed up to the confirmation screen.
    ────────────────────────────────────────────────────────────── */
 
 type CartPageProps = {
   restaurant: Restaurant;
   cart: Record<number, number>;
   setCart: (next: Record<number, number>) => void;
+  customerId: number;
+  userName?: string | null;
   onBack: () => void;
   onPlaceOrder: (info: {
     orderId: number;
@@ -32,13 +31,15 @@ export default function CartPage({
   restaurant,
   cart,
   setCart,
+  customerId,
+  userName,
   onBack,
   onPlaceOrder,
 }: CartPageProps) {
   const [payment, setPayment] = useState<"cash">("cash");
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Build a list of {dish, qty} for rendering, in menu order
   const lines = useMemo(
     () =>
       restaurant.dishes
@@ -48,7 +49,7 @@ export default function CartPage({
   );
 
   const subtotal = useMemo(
-    () => lines.reduce((sum, l) => sum + l.dish.price * l.qty, 0),
+    () => lines.reduce((sum, l) => sum + Number(l.dish.price) * l.qty, 0),
     [lines]
   );
   const deliveryFee = 2.5;
@@ -61,21 +62,30 @@ export default function CartPage({
     setCart(next);
   };
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     if (lines.length === 0 || submitting) return;
+    setError(null);
     setSubmitting(true);
 
-    // Fake order id for now — backend will return a real one.
-    const orderId = Math.floor(Math.random() * 9000) + 1000;
-
-    // Simulate a tiny network delay so the button feedback feels real.
-    setTimeout(() => {
+    try {
+      const order = await placeOrder({
+        customer_id: customerId,
+        restaurant_id: restaurant.id,
+        items: lines.map((l) => ({
+          dish_id: l.dish.id,
+          quantity: l.qty,
+        })),
+      });
       onPlaceOrder({
-        orderId,
+        orderId: order.id,
         total,
         restaurantName: restaurant.name,
       });
-    }, 350);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not place order.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -83,7 +93,6 @@ export default function CartPage({
       <div className="bg-blob bg-blob--teal" />
       <div className="bg-blob bg-blob--amber" />
 
-      {/* ── Sidebar (same shell as the other pages) ── */}
       <aside className="sidebar">
         <div className="sidebar-logo">
           Eat<span>out!</span>
@@ -101,23 +110,20 @@ export default function CartPage({
       </aside>
 
       <div className="dashboard-main">
-        {/* Top bar */}
         <div className="topbar">
           <button className="upgrade-btn" onClick={onBack}>
             ← Back to {restaurant.name}
           </button>
           <p className="topbar-greeting">
-            Hi there, <span>*customer_user_name*</span>
+            Hi there, <span>{userName ?? "guest"}</span>
           </p>
         </div>
 
-        {/* Page title */}
         <div className="cart-header">
           <h1 className="cart-title">Your order</h1>
           <p className="cart-subtitle">From {restaurant.name}</p>
         </div>
 
-        {/* Empty state */}
         {lines.length === 0 ? (
           <div className="cart-empty">
             <p>Your cart is empty.</p>
@@ -127,17 +133,15 @@ export default function CartPage({
           </div>
         ) : (
           <>
-            {/* Line items */}
             <div className="cart-lines">
               {lines.map(({ dish, qty }) => (
                 <div className="cart-line" key={dish.id}>
                   <div className="cart-line-info">
                     <div className="dish-name">{dish.name}</div>
                     <div className="dish-price">
-                      ${dish.price.toFixed(2)} each
+                      ${Number(dish.price).toFixed(2)} each
                     </div>
                   </div>
-
                   <div className="qty-control">
                     <button
                       className="qty-btn"
@@ -155,15 +159,13 @@ export default function CartPage({
                       +
                     </button>
                   </div>
-
                   <div className="cart-line-total">
-                    ${(dish.price * qty).toFixed(2)}
+                    ${(Number(dish.price) * qty).toFixed(2)}
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Payment method */}
             <div className="cart-section">
               <h2 className="section-heading">Payment method</h2>
               <label className="payment-row">
@@ -181,7 +183,6 @@ export default function CartPage({
               </label>
             </div>
 
-            {/* Totals */}
             <div className="cart-section">
               <div className="totals-row">
                 <span>Subtotal</span>
@@ -197,14 +198,31 @@ export default function CartPage({
               </div>
             </div>
 
-            {/* Submit */}
+            {error && (
+              <div
+                style={{
+                  margin: "0 28px 8px",
+                  padding: "10px 14px",
+                  borderRadius: 10,
+                  fontSize: 13,
+                  background: "rgba(231,29,54,0.1)",
+                  color: "var(--color-red, #e71d36)",
+                  border: "1px solid rgba(231,29,54,0.3)",
+                }}
+              >
+                {error}
+              </div>
+            )}
+
             <div className="cart-submit-row">
               <button
                 className="cart-cta cart-cta--full"
                 onClick={handlePlaceOrder}
                 disabled={submitting}
               >
-                {submitting ? "Placing order…" : `Place order • $${total.toFixed(2)}`}
+                {submitting
+                  ? "Placing order…"
+                  : `Place order • $${total.toFixed(2)}`}
               </button>
             </div>
           </>

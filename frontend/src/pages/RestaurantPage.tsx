@@ -1,28 +1,23 @@
 import { useMemo, useState } from "react";
 import "../styles/Dashboard.css";
 import "../styles/Restaurant.css";
-import { findRestaurantById } from "../data/restaurants";
+import type { Restaurant } from "../data/restaurants";
 
 /* ──────────────────────────────────────────────────────────────
    Restaurant menu page
-
-   Shows a single restaurant's hero (name, description, rating)
-   and its dish list. Lets the user add dishes to the cart and
-   either continue shopping or jump to the cart/checkout screen
-   via the floating bar at the bottom.
-
-   The cart can be either:
-     • controlled by the parent (cart + setCart props provided)
-     • or self-contained (no props provided — useful for
-       previewing this page on its own).
+   Receives the chosen restaurant directly from App.tsx (looked
+   up from the list fetched from the backend). The cart is
+   either controlled by the parent or held internally as a
+   fallback for standalone preview.
    ────────────────────────────────────────────────────────────── */
 
 type RestaurantPageProps = {
-  restaurantId?: number;
+  restaurant: Restaurant;
   cart?: Record<number, number>;
   setCart?: (next: Record<number, number>) => void;
+  userName?: string | null;
   onBack?: () => void;
-  onCheckout?: () => void; // called when the floating bar's button is clicked
+  onCheckout?: () => void;
 };
 
 function Stars({ rating, max = 5 }: { rating: number; max?: number }) {
@@ -38,15 +33,13 @@ function Stars({ rating, max = 5 }: { rating: number; max?: number }) {
 }
 
 export default function RestaurantPage({
-  restaurantId = 1,
+  restaurant,
   cart: cartProp,
   setCart: setCartProp,
+  userName,
   onBack,
   onCheckout,
 }: RestaurantPageProps) {
-  const restaurant = findRestaurantById(restaurantId);
-
-  // Fall back to local state if the parent doesn't manage the cart.
   const [internalCart, setInternalCart] = useState<Record<number, number>>({});
   const cart = cartProp ?? internalCart;
   const setCart = setCartProp ?? setInternalCart;
@@ -62,7 +55,6 @@ export default function RestaurantPage({
   const dec = (dishId: number) => setQty(dishId, (cart[dishId] ?? 0) - 1);
 
   const { itemCount, total } = useMemo(() => {
-    if (!restaurant) return { itemCount: 0, total: 0 };
     let count = 0;
     let total = 0;
     for (const dish of restaurant.dishes) {
@@ -73,32 +65,14 @@ export default function RestaurantPage({
     return { itemCount: count, total };
   }, [cart, restaurant]);
 
-  if (!restaurant) {
-    return (
-      <div className="dashboard-page">
-        <div className="dashboard-main" style={{ padding: 28 }}>
-          <p>Restaurant not found.</p>
-          {onBack && (
-            <button className="upgrade-btn" onClick={onBack}>
-              ← Back
-            </button>
-          )}
-        </div>
-      </div>
-    );
-  }
-
   const handleCartBarClick = () => {
-    if (onCheckout) {
-      onCheckout();
-    } else {
-      // Standalone preview fallback
+    if (onCheckout) onCheckout();
+    else
       alert(
         `Order ready!\n${itemCount} item(s) • $${total.toFixed(
           2
         )}\n(Demo only — wire onCheckout for full flow.)`
       );
-    }
   };
 
   return (
@@ -106,7 +80,6 @@ export default function RestaurantPage({
       <div className="bg-blob bg-blob--teal" />
       <div className="bg-blob bg-blob--amber" />
 
-      {/* ── Sidebar (same as Dashboard) ── */}
       <aside className="sidebar">
         <div className="sidebar-logo">
           Eat<span>out!</span>
@@ -129,7 +102,7 @@ export default function RestaurantPage({
             ← Back to restaurants
           </button>
           <p className="topbar-greeting">
-            Hi there, <span>*customer_user_name*</span>
+            Hi there, <span>{userName ?? "guest"}</span>
           </p>
         </div>
 
@@ -144,43 +117,56 @@ export default function RestaurantPage({
 
         <div className="menu-section">
           <h2 className="menu-heading">Menu</h2>
-          <div className="dish-list">
-            {restaurant.dishes.map((dish) => {
-              const qty = cart[dish.id] ?? 0;
-              return (
-                <div className="dish-row" key={dish.id}>
-                  <div className="dish-info">
-                    <div className="dish-name">{dish.name}</div>
-                    <div className="dish-price">${dish.price.toFixed(2)}</div>
-                  </div>
-
-                  {qty === 0 ? (
-                    <button className="add-btn" onClick={() => inc(dish.id)}>
-                      + Add
-                    </button>
-                  ) : (
-                    <div className="qty-control">
-                      <button
-                        className="qty-btn"
-                        onClick={() => dec(dish.id)}
-                        aria-label="Decrease"
-                      >
-                        −
-                      </button>
-                      <span className="qty-value">{qty}</span>
-                      <button
-                        className="qty-btn"
-                        onClick={() => inc(dish.id)}
-                        aria-label="Increase"
-                      >
-                        +
-                      </button>
+          {restaurant.dishes.length === 0 ? (
+            <p
+              style={{
+                color: "rgba(1,22,39,0.35)",
+                fontSize: 13,
+              }}
+            >
+              This restaurant hasn't added any dishes yet.
+            </p>
+          ) : (
+            <div className="dish-list">
+              {restaurant.dishes.map((dish) => {
+                const qty = cart[dish.id] ?? 0;
+                return (
+                  <div className="dish-row" key={dish.id}>
+                    <div className="dish-info">
+                      <div className="dish-name">{dish.name}</div>
+                      <div className="dish-price">
+                        ${Number(dish.price).toFixed(2)}
+                      </div>
                     </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+
+                    {qty === 0 ? (
+                      <button className="add-btn" onClick={() => inc(dish.id)}>
+                        + Add
+                      </button>
+                    ) : (
+                      <div className="qty-control">
+                        <button
+                          className="qty-btn"
+                          onClick={() => dec(dish.id)}
+                          aria-label="Decrease"
+                        >
+                          −
+                        </button>
+                        <span className="qty-value">{qty}</span>
+                        <button
+                          className="qty-btn"
+                          onClick={() => inc(dish.id)}
+                          aria-label="Increase"
+                        >
+                          +
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {itemCount > 0 && (

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Dashboard from "./pages/DashboardPage.tsx";
 import RestaurantPage from "./pages/RestaurantPage.tsx";
 import CartPage from "./pages/CartPage.tsx";
@@ -7,7 +7,8 @@ import OwnerMenuEditPage from "./pages/OwnerMenuEditPage.tsx";
 import WelcomePage from "./pages/WelcomePage.tsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import SignUpPage from "./pages/SignUpPage.jsx";
-import { findRestaurantById } from "./data/restaurants";
+import { findRestaurantById, type Restaurant } from "./data/restaurants";
+import { listRestaurants } from "./data/restaurantApi";
 import {
   getCurrentUser,
   logout as authLogout,
@@ -18,22 +19,20 @@ import "./App.css";
 /* ──────────────────────────────────────────────────────────────
    App / screen switcher
 
-   Auth flow:
-     1. On launch, if there's an existing session in localStorage
-        we restore it. Otherwise we show the Welcome screen.
-     2. From Welcome the user can: log in, sign up, or continue
-        as guest (no account, just browse + place mock orders).
-     3. After login or registration:
-          • role === "restaurant" → goes straight to the owner
-            page, locked to their own restaurant only.
-          • role === "customer"   → goes to the customer dashboard
-            (same flow guests use).
-     4. Logging out wipes the session and takes them back to
-        Welcome.
+   Data flow:
+     • On mount we fetch the full restaurant list from the
+       FastAPI backend (which talks to Supabase). That list is
+       the source of truth for the customer-facing pages and
+       gets re-fetched after the owner page is exited.
+     • Auth uses the backend too — login/register hit /login
+       and /register. The current user is stashed in localStorage
+       so the session survives a refresh.
+     • Cart / shopping flow is kept in-memory + localStorage
+       for the customer-or-guest experience.
 
-   Shopping state (cart, selected restaurant, last order) is held
-   here and survives navigation between dashboard / restaurant /
-   cart / confirmation, just like before.
+   When the backend is unreachable, we show a small error screen
+   with a Retry button — this is the most common dev-time issue
+   ("did you start the Python server?").
    ────────────────────────────────────────────────────────────── */
 
 type CustomerView =
@@ -76,16 +75,38 @@ function loadPersisted(): PersistedState {
   }
 }
 
+/* Tiny full-screen helpers used during initial load / errors. */
+function CenteredMessage({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "var(--color-porcelain)",
+        color: "var(--color-ink)",
+        fontFamily: "DM Sans, sans-serif",
+        padding: 24,
+      }}
+    >
+      <div style={{ maxWidth: 360, textAlign: "center" }}>{children}</div>
+    </div>
+  );
+}
+
 export default function App() {
   /* ── auth state ────────────────────────────────────────────── */
   const [user, setUser] = useState<User | null>(getCurrentUser());
-  // hasStarted means the user picked one of the three welcome
-  // options. If the session is already restored from localStorage
-  // we treat them as already started.
   const [hasStarted, setHasStarted] = useState<boolean>(user !== null);
   const [authView, setAuthView] = useState<AuthView>("welcome");
 
-  /* ── shopping state (used for customer/guest flow) ─────────── */
+  /* ── data state ────────────────────────────────────────────── */
+  const [allRestaurants, setAllRestaurants] = useState<Restaurant[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
+  const [loadingError, setLoadingError] = useState<string | null>(null);
+
+  /* ── shopping state ───────────────────────────────────────── */
   const initial = loadPersisted();
   const [view, setView] = useState<CustomerView>("dashboard");
   const [selectedRestaurantId, setSelectedRestaurantId] = useState<
@@ -94,7 +115,7 @@ export default function App() {
   const [cart, setCart] = useState<Record<number, number>>(initial.cart);
   const [lastOrder, setLastOrder] = useState<LastOrder | null>(null);
 
-  /* Persist shopping state on change */
+  /* Persist cart + selected restaurant */
   useEffect(() => {
     try {
       const payload: PersistedState = { selectedRestaurantId, cart };
@@ -104,10 +125,34 @@ export default function App() {
     }
   }, [selectedRestaurantId, cart]);
 
-  const restaurant =
-    selectedRestaurantId != null
-      ? findRestaurantById(selectedRestaurantId)
-      : undefined;
+  const reloadRestaurants = useCallback(async () => {
+    try {
+      setLoadingError(null);
+      const list = await listRestaurants();
+      setAllRestaurants(list);
+    } catch (e) {
+      setLoadingError(
+        e instanceof Error
+          ? e.message
+          : "Could not reach the backend at http://localhost:8000."
+      );
+    } finally {
+      setDataLoading(false);
+    }
+  }, []);
+
+  // Initial fetch
+  useEffect(() => {
+    reloadRestaurants();
+  }, [reloadRestaurants]);
+
+  const restaurant = useMemo(
+    () =>
+      selectedRestaurantId != null
+        ? findRestaurantById(allRestaurants, selectedRestaurantId)
+        : undefined,
+    [allRestaurants, selectedRestaurantId]
+  );
 
   const resumeCart = useMemo(() => {
     if (!restaurant) return undefined;
@@ -128,13 +173,15 @@ export default function App() {
   }, [restaurant, cart]);
 
   /* ── auth actions ──────────────────────────────────────────── */
-  const handleAuthSuccess = (u: User) => {
+  const handleAuthSuccess = async (u: User) => {
     setUser(u);
     setHasStarted(true);
-    // Clear any in-progress cart from a previous session
     setCart({});
     setSelectedRestaurantId(null);
     setView("dashboard");
+    // Restaurant accounts may have just created a new restaurant —
+    // refresh so it appears in the list.
+    await reloadRestaurants();
   };
 
   const handleContinueAsGuest = () => {
@@ -145,22 +192,26 @@ export default function App() {
 
   const handleLogout = async () => {
     await authLogout();
-    setUser(null);
-    setHasStarted(false);
-    setAuthView("welcome");
-    setCart({});
-    setSelectedRestaurantId(null);
-    setLastOrder(null);
-    setView("dashboard");
+    // Also clear any in-progress shopping state so a fresh
+    // browser session doesn't restore a stale cart.
+    try {
+      localStorage.removeItem("eatout_state_v1");
+    } catch {
+      /* ignore */
+    }
+    // Full page reload — most reliable way to reset every piece
+    // of in-memory state from any page (the restaurant owner
+    // page in particular has been flaky with state-only logout).
+    window.location.reload();
   };
 
-  /* ── customer flow callbacks (unchanged from before) ──────── */
+  /* ── shopping flow callbacks ──────────────────────────────── */
   const goToRestaurant = (restaurantId: number) => {
     const cartHasItems = Object.values(cart).some((qty) => qty > 0);
     const isDifferent =
       selectedRestaurantId !== null && selectedRestaurantId !== restaurantId;
     if (cartHasItems && isDifferent) {
-      const current = findRestaurantById(selectedRestaurantId!);
+      const current = findRestaurantById(allRestaurants, selectedRestaurantId!);
       const ok = window.confirm(
         `You still have items from ${
           current?.name ?? "another restaurant"
@@ -187,9 +238,56 @@ export default function App() {
     setView("dashboard");
   };
   const goToOwnerView = () => setView("owner");
-  const backFromOwnerView = () => setView("dashboard");
+  // After leaving the owner page (guest preview), reload the list
+  // so customer pages reflect any edits.
+  const backFromOwnerView = async () => {
+    await reloadRestaurants();
+    setView("dashboard");
+  };
 
   /* ── render ───────────────────────────────────────────────── */
+
+  // Initial blocking load
+  if (dataLoading) {
+    return (
+      <CenteredMessage>
+        <p style={{ fontSize: 14, opacity: 0.6 }}>Loading restaurants…</p>
+      </CenteredMessage>
+    );
+  }
+
+  // Backend unreachable
+  if (loadingError) {
+    return (
+      <CenteredMessage>
+        <h2 style={{ fontFamily: "Playfair Display, serif", marginBottom: 8 }}>
+          Can't reach the server
+        </h2>
+        <p style={{ fontSize: 13, opacity: 0.6, marginBottom: 16 }}>
+          {loadingError}
+        </p>
+        <p style={{ fontSize: 12, opacity: 0.55, marginBottom: 16 }}>
+          Make sure the FastAPI backend is running:
+          <br />
+          <code>python -m uvicorn app:app --reload --port 8000</code>
+        </p>
+        <button
+          onClick={reloadRestaurants}
+          style={{
+            background: "var(--color-ink)",
+            color: "var(--color-porcelain)",
+            border: "none",
+            padding: "10px 20px",
+            borderRadius: 10,
+            cursor: "pointer",
+            fontFamily: "DM Sans, sans-serif",
+          }}
+        >
+          Retry
+        </button>
+      </CenteredMessage>
+    );
+  }
 
   // Pre-launch — Welcome / Login / SignUp
   if (!hasStarted) {
@@ -220,42 +318,42 @@ export default function App() {
     );
   }
 
-  // Restaurant-role users get the owner page, locked to their restaurant.
+  // Restaurant-role users only see the owner page (locked to their restaurant).
   if (user?.role === "restaurant") {
-    if (user.restaurantId === undefined) {
-      // Shouldn't happen — registration always creates one. Fail safe.
+    if (user.restaurant_id === undefined || user.restaurant_id === null) {
       return (
-        <div style={{ padding: 32 }}>
-          <p>This restaurant account is not linked to a restaurant.</p>
+        <CenteredMessage>
+          <p>This restaurant account isn't linked to a restaurant yet.</p>
           <button onClick={handleLogout}>Log out</button>
-        </div>
+        </CenteredMessage>
       );
     }
     return (
       <OwnerMenuEditPage
-        fixedRestaurantId={user.restaurantId}
+        fixedRestaurantId={user.restaurant_id}
         onExit={handleLogout}
         exitLabel="Log out"
       />
     );
   }
 
-  // Customer or guest — normal shopping flow
+  // Customer / guest flow
+  // Use customer_id from the logged-in user, or fall back to demo
+  // customer #1 for guests so order placement still works.
+  const customerId = user?.id ?? 1;
   const userName = user ? user.email.split("@")[0] : null;
 
   if (view === "owner") {
-    // Guests can preview the owner UI from the dashboard sidebar.
+    // Guests can preview the multi-restaurant owner UI from the sidebar.
     return (
-      <OwnerMenuEditPage
-        onExit={backFromOwnerView}
-        exitLabel="Customer view"
-      />
+      <OwnerMenuEditPage onExit={backFromOwnerView} exitLabel="Customer view" />
     );
   }
 
   if (view === "dashboard") {
     return (
       <Dashboard
+        restaurants={allRestaurants}
         onSelectRestaurant={goToRestaurant}
         resumeCart={resumeCart}
         onGoToOwnerView={goToOwnerView}
@@ -269,9 +367,10 @@ export default function App() {
   if (view === "restaurant" && restaurant) {
     return (
       <RestaurantPage
-        restaurantId={restaurant.id}
+        restaurant={restaurant}
         cart={cart}
         setCart={setCart}
+        userName={userName}
         onBack={backToDashboard}
         onCheckout={goToCart}
       />
@@ -284,6 +383,8 @@ export default function App() {
         restaurant={restaurant}
         cart={cart}
         setCart={setCart}
+        customerId={customerId}
+        userName={userName}
         onBack={backToRestaurant}
         onPlaceOrder={handlePlaceOrder}
       />
@@ -304,6 +405,7 @@ export default function App() {
   // Safety fallback
   return (
     <Dashboard
+      restaurants={allRestaurants}
       onSelectRestaurant={goToRestaurant}
       resumeCart={resumeCart}
       onGoToOwnerView={goToOwnerView}

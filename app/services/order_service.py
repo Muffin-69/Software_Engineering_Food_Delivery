@@ -1,14 +1,11 @@
 """
-Order service — backed by Supabase.
+Order service — Supabase-backed.
 
-Schema reminder (see supabase/schema.sql):
+Schema (see supabase/schema.sql):
   • orders        — header (customer, restaurant, status, created_at)
-  • order_items   — one row per dish in the order, with quantity
-                    and a snapshot of the unit price at order time
+  • order_items   — line items with quantity + unit_price snapshot
 
-Creating an order is therefore a two-step insert: first the order
-row, then the line items. We capture the dish prices at order time
-so changes to dish prices later don't rewrite history.
+Creating an order is a two-step insert: header first, then items.
 """
 
 from utils.supabase_client import supabase
@@ -28,10 +25,11 @@ def _get_order_with_items(order_id: int):
     return result.data[0] if result.data else None
 
 
-def create_order(customer_id: int, order_data):
-    # 1. Insert the order header
+def create_order(order_data):
+    """order_data: OrderCreate Pydantic model with customer_id, restaurant_id, items[]"""
+    # 1. Header
     order_payload = {
-        "customer_id": customer_id,
+        "customer_id": order_data.customer_id,
         "restaurant_id": order_data.restaurant_id,
         "status": "pending",
     }
@@ -40,7 +38,7 @@ def create_order(customer_id: int, order_data):
         return None
     order = order_result.data[0]
 
-    # 2. Look up current dish prices so we can snapshot them
+    # 2. Snapshot dish prices
     dish_ids = [item.dish_id for item in order_data.items]
     if dish_ids:
         dishes_result = (
@@ -53,7 +51,7 @@ def create_order(customer_id: int, order_data):
     else:
         price_map = {}
 
-    # 3. Insert order_items in one go
+    # 3. Line items
     items_payload = [
         {
             "order_id": order["id"],
@@ -66,7 +64,6 @@ def create_order(customer_id: int, order_data):
     if items_payload:
         supabase.table("order_items").insert(items_payload).execute()
 
-    # 4. Return the full order with items nested
     return _get_order_with_items(order["id"])
 
 
