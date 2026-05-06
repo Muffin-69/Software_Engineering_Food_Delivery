@@ -31,7 +31,7 @@ import "dotenv/config";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const SUPABASE_URL = process.env.SUPABASE_URL;
+let SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
@@ -42,6 +42,11 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
   );
   process.exit(1);
 }
+
+// Strip any trailing /rest/v1 (or trailing slashes) — the Supabase
+// client adds that path itself, so passing it in causes doubled
+// paths like /rest/v1//rest/v1/order_items and confusing errors.
+SUPABASE_URL = SUPABASE_URL.replace(/\/rest\/v1\/?$/, "").replace(/\/+$/, "");
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
   auth: { persistSession: false },
@@ -56,6 +61,10 @@ function loadJson(relPath) {
 
 async function wipeAll() {
   // Delete in reverse dependency order so FKs don't block us.
+  // Using .not("id", "is", null) instead of .gte("id", 0) because
+  // recent supabase-js versions inject a UUID-based safety filter
+  // when a "trivial" range filter is detected, and that conflicts
+  // with bigint id columns ("invalid input syntax for type bigint").
   console.log("Wiping existing rows…");
   for (const table of [
     "order_items",
@@ -65,7 +74,10 @@ async function wipeAll() {
     "users",
     "restaurants",
   ]) {
-    const { error } = await supabase.from(table).delete().gte("id", 0);
+    const { error } = await supabase
+      .from(table)
+      .delete()
+      .not("id", "is", null);
     if (error) {
       // It's fine if the table is already empty.
       if (!/no rows/i.test(error.message)) {
