@@ -15,7 +15,13 @@ def hash_password(password: str) -> str:
 
 
 def verify_password(password: str, hashed: str) -> bool:
-    return bcrypt.checkpw(password.encode(), hashed.encode())
+    # If the stored value isn't a valid bcrypt hash (corrupted row,
+    # plaintext entered manually in the Supabase Table Editor, etc.)
+    # treat it as a wrong-password mismatch rather than crashing.
+    try:
+        return bcrypt.checkpw(password.encode(), (hashed or "").encode())
+    except (ValueError, TypeError):
+        return False
 
 
 def _strip_password(user: dict) -> dict:
