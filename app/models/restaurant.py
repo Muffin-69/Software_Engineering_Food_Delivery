@@ -5,12 +5,14 @@ from typing import List, Optional
 class RestaurantCreate(BaseModel):
     name: str
     description: Optional[str] = ""
+    address: Optional[str] = ""
     tags: Optional[List[str]] = None
 
 
 class RestaurantUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
+    address: Optional[str] = None
     tags: Optional[List[str]] = None
 
 

@@ -31,6 +31,7 @@ CREATE TABLE restaurants (
     description TEXT     NOT NULL DEFAULT '',
     rating      SMALLINT NOT NULL DEFAULT 0 CHECK (rating BETWEEN 0 AND 5),
     tags        TEXT[]   NOT NULL DEFAULT ARRAY[]::TEXT[],
+    address     TEXT     NOT NULL DEFAULT '',
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

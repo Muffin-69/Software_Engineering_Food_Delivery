@@ -109,6 +109,7 @@ async function main() {
         description: r.description ?? "",
         rating: r.rating ?? 0,
         tags: r.tags ?? [],
+        address: r.address ?? "",
       })
       .select()
       .single();

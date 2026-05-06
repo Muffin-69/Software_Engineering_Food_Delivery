@@ -7,6 +7,8 @@ import OwnerMenuEditPage from "./pages/OwnerMenuEditPage.tsx";
 import WelcomePage from "./pages/WelcomePage.tsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import SignUpPage from "./pages/SignUpPage.jsx";
+import OrderHistoryPage from "./pages/OrderHistoryPage.tsx";
+import CheckStatusPage from "./pages/CheckStatusPage.tsx";
 import { findRestaurantById, type Restaurant } from "./data/restaurants";
 import { listRestaurants } from "./data/restaurantApi";
 import {
@@ -40,7 +42,9 @@ type CustomerView =
   | "restaurant"
   | "cart"
   | "confirmation"
-  | "owner";
+  | "owner"
+  | "check-status"
+  | "order-history";
 
 type AuthView = "welcome" | "login" | "signup";
 
@@ -244,6 +248,8 @@ export default function App() {
     await reloadRestaurants();
     setView("dashboard");
   };
+  const goToCheckStatus = () => setView("check-status");
+  const goToOrderHistory = () => setView("order-history");
 
   /* ── render ───────────────────────────────────────────────── */
 
@@ -357,8 +363,38 @@ export default function App() {
         onSelectRestaurant={goToRestaurant}
         resumeCart={resumeCart}
         onGoToOwnerView={goToOwnerView}
+        onGoToCheckStatus={goToCheckStatus}
+        onGoToOrderHistory={goToOrderHistory}
         userName={userName}
         isLoggedIn={user !== null}
+        onLogout={handleLogout}
+      />
+    );
+  }
+
+  if (view === "check-status") {
+    return (
+      <CheckStatusPage
+        customerId={customerId}
+        restaurants={allRestaurants}
+        userName={userName}
+        isLoggedIn={user !== null}
+        onGoToDashboard={backToDashboard}
+        onGoToOrderHistory={goToOrderHistory}
+        onLogout={handleLogout}
+      />
+    );
+  }
+
+  if (view === "order-history") {
+    return (
+      <OrderHistoryPage
+        customerId={customerId}
+        restaurants={allRestaurants}
+        userName={userName}
+        isLoggedIn={user !== null}
+        onGoToDashboard={backToDashboard}
+        onGoToCheckStatus={goToCheckStatus}
         onLogout={handleLogout}
       />
     );
@@ -409,6 +445,8 @@ export default function App() {
       onSelectRestaurant={goToRestaurant}
       resumeCart={resumeCart}
       onGoToOwnerView={goToOwnerView}
+      onGoToCheckStatus={goToCheckStatus}
+      onGoToOrderHistory={goToOrderHistory}
       userName={userName}
       isLoggedIn={user !== null}
       onLogout={handleLogout}

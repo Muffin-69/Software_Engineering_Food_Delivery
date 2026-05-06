@@ -10,6 +10,7 @@ import {
   deleteDish,
 } from "../data/restaurantApi";
 import { type Restaurant } from "../data/restaurants";
+import OwnerOrdersTab from "./OwnerOrdersTab";
 
 /* ──────────────────────────────────────────────────────────────
    Owner / Restaurant menu editor
@@ -51,9 +52,13 @@ export default function OwnerMenuEditPage({
   );
   const [loading, setLoading] = useState(true);
 
+  // ── tab switcher (sidebar nav)
+  const [activeTab, setActiveTab] = useState<"menu" | "orders">("menu");
+
   // ── editable info form
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [address, setAddress] = useState("");
   const [tagsText, setTagsText] = useState("");
   const [savingInfo, setSavingInfo] = useState(false);
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
@@ -101,12 +106,14 @@ export default function OwnerMenuEditPage({
     if (!selected) {
       setName("");
       setDescription("");
+      setAddress("");
       setTagsText("");
       setDishDrafts({});
       return;
     }
     setName(selected.name);
     setDescription(selected.description);
+    setAddress(selected.address ?? "");
     setTagsText(selected.tags.join(", "));
     const drafts: Record<number, DishDraft> = {};
     for (const d of selected.dishes) {
@@ -132,7 +139,12 @@ export default function OwnerMenuEditPage({
         .split(",")
         .map((t) => t.trim())
         .filter(Boolean);
-      await updateRestaurantInfo(selectedId, { name, description, tags });
+      await updateRestaurantInfo(selectedId, {
+        name,
+        description,
+        address,
+        tags,
+      });
       await reloadAll();
       setInfoMessage("Saved.");
       // Auto-clear the inline confirmation after a moment
@@ -227,8 +239,24 @@ export default function OwnerMenuEditPage({
           Eat<span>out!</span>
         </div>
         <nav className="sidebar-nav">
-          <a className="nav-item nav-item--active">Manage menu</a>
-          <a className="nav-item">Incoming orders</a>
+          <a
+            className={`nav-item${
+              activeTab === "menu" ? " nav-item--active" : ""
+            }`}
+            style={{ cursor: "pointer" }}
+            onClick={() => setActiveTab("menu")}
+          >
+            Manage menu
+          </a>
+          <a
+            className={`nav-item${
+              activeTab === "orders" ? " nav-item--active" : ""
+            }`}
+            style={{ cursor: "pointer" }}
+            onClick={() => setActiveTab("orders")}
+          >
+            Incoming orders
+          </a>
         </nav>
         <div className="sidebar-footer">
           <a className="footer-link">Contact us</a>
@@ -289,7 +317,11 @@ export default function OwnerMenuEditPage({
           <div className="owner-banner owner-banner--error">{error}</div>
         )}
 
-        {selected && (
+        {selected && activeTab === "orders" && (
+          <OwnerOrdersTab restaurantId={selected.id} restaurant={selected} />
+        )}
+
+        {selected && activeTab === "menu" && (
           <>
             {/* ── Restaurant info section ── */}
             <section className="owner-section">
@@ -318,6 +350,20 @@ export default function OwnerMenuEditPage({
                   rows={2}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
+                />
+              </div>
+
+              <div className="owner-field">
+                <label className="owner-label" htmlFor="r-addr">
+                  Address
+                </label>
+                <input
+                  id="r-addr"
+                  className="owner-input"
+                  type="text"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="12 Brivibas iela, Riga"
                 />
               </div>
 

@@ -76,6 +76,7 @@ def create_restaurant(payload):
     row = {
         "name": name,
         "description": (payload.description or "").strip(),
+        "address": (payload.address or "").strip(),
         "rating": 0,
         "tags": _normalise_tags(payload.tags) or [],
     }
@@ -95,6 +96,8 @@ def update_restaurant_info(restaurant_id: int, payload):
         updates["name"] = n
     if payload.description is not None:
         updates["description"] = payload.description.strip()
+    if payload.address is not None:
+        updates["address"] = payload.address.strip()
     if payload.tags is not None:
         updates["tags"] = _normalise_tags(payload.tags) or []
     if not updates:

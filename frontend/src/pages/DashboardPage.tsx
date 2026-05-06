@@ -22,6 +22,8 @@ type DashboardPageProps = {
     onResume: () => void;
   };
   onGoToOwnerView?: () => void;
+  onGoToCheckStatus?: () => void;
+  onGoToOrderHistory?: () => void;
   userName?: string | null;
   isLoggedIn?: boolean;
   onLogout?: () => void;
@@ -44,6 +46,8 @@ export default function Dashboard({
   onSelectRestaurant,
   resumeCart,
   onGoToOwnerView,
+  onGoToCheckStatus,
+  onGoToOrderHistory,
   userName,
   isLoggedIn,
   onLogout,
@@ -80,8 +84,20 @@ export default function Dashboard({
         </div>
         <nav className="sidebar-nav">
           <a className="nav-item nav-item--active">New order</a>
-          <a className="nav-item">Check status</a>
-          <a className="nav-item">Order history</a>
+          <a
+            className="nav-item"
+            style={{ cursor: onGoToCheckStatus ? "pointer" : "default" }}
+            onClick={onGoToCheckStatus}
+          >
+            Check status
+          </a>
+          <a
+            className="nav-item"
+            style={{ cursor: onGoToOrderHistory ? "pointer" : "default" }}
+            onClick={onGoToOrderHistory}
+          >
+            Order history
+          </a>
         </nav>
         <div className="sidebar-footer">
           <a className="footer-link">Contact us</a>

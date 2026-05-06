@@ -257,3 +257,143 @@
 .owner-danger-btn:hover {
     background: rgba(231, 29, 54, 0.08);
 }
+
+/* ──────────────────────────────────────────────────────────────
+   Incoming orders tab
+   ────────────────────────────────────────────────────────────── */
+
+.orders-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+}
+
+.orders-toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.orders-section-label {
+    font-family: "DM Sans", sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(1, 22, 39, 0.45);
+    margin: 8px 0 10px;
+}
+
+.order-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.order-card {
+    background: rgba(1, 22, 39, 0.03);
+    border: 1px solid rgba(1, 22, 39, 0.08);
+    border-radius: 14px;
+    padding: 14px 16px;
+}
+
+.order-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.order-id {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-ink);
+}
+
+.order-meta {
+    font-size: 12px;
+    color: rgba(1, 22, 39, 0.5);
+    margin-top: 2px;
+}
+
+.order-items {
+    border-top: 1px dashed rgba(1, 22, 39, 0.1);
+    border-bottom: 1px dashed rgba(1, 22, 39, 0.1);
+    padding: 8px 0;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.order-item-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 13px;
+    color: var(--color-ink);
+}
+
+.order-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 14px;
+    color: var(--color-ink);
+    margin-bottom: 12px;
+}
+
+.order-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.order-action-done {
+    padding: 7px 14px;
+    font-size: 12px;
+    border-radius: 10px;
+}
+.order-action-done:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ── Status badges ── */
+.order-status {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 10px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-family: "DM Sans", sans-serif;
+    white-space: nowrap;
+}
+
+.order-status--pending {
+    background: rgba(255, 159, 28, 0.18);
+    color: var(--color-amber, #ff9f1c);
+}
+.order-status--preparing {
+    background: rgba(1, 22, 39, 0.1);
+    color: var(--color-ink);
+}
+.order-status--on-the-way {
+    background: rgba(65, 234, 212, 0.2);
+    color: #0e8e7e;
+}
+.order-status--delivered {
+    background: rgba(65, 234, 212, 0.16);
+    color: #0a6e62;
+}
+.order-status--cancelled {
+    background: rgba(231, 29, 54, 0.12);
+    color: var(--color-red, #e71d36);
+}
