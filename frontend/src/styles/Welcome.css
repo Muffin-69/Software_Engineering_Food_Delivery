@@ -1,0 +1,73 @@
+/* ──────────────────────────────────────────────────────────────
+   Welcome page styles
+   Reuses .auth-page, .bg-blob, .auth-header, .logo from Auth.css.
+   ────────────────────────────────────────────────────────────── */
+
+.welcome-main {
+    justify-content: center;
+    padding-top: 40px;
+    padding-bottom: 80px;
+}
+
+.welcome-hero {
+    text-align: center;
+    margin-bottom: 36px;
+}
+
+.welcome-hero-title {
+    font-family: "Playfair Display", serif;
+    font-style: italic;
+    font-weight: 700;
+    font-size: 56px;
+    color: var(--color-ink);
+    margin: 0 0 8px;
+    letter-spacing: -0.02em;
+}
+
+.welcome-hero-sub {
+    font-size: 14px;
+    color: rgba(1, 22, 39, 0.55);
+    font-weight: 300;
+    margin: 0;
+}
+
+.welcome-actions {
+    width: 100%;
+    max-width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.welcome-btn {
+    margin-top: 0;
+}
+
+.welcome-btn--secondary {
+    background: transparent;
+    color: var(--color-ink);
+    border: 1px solid rgba(1, 22, 39, 0.2);
+}
+
+.welcome-btn--secondary:hover {
+    background: rgba(1, 22, 39, 0.04);
+    border-color: var(--color-teal);
+}
+
+.welcome-guest-btn {
+    background: none;
+    border: none;
+    margin-top: 8px;
+    color: rgba(1, 22, 39, 0.5);
+    font-size: 13px;
+    font-family: "DM Sans", sans-serif;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color 0.2s;
+    padding: 6px;
+}
+
+.welcome-guest-btn:hover {
+    color: var(--color-ink);
+}

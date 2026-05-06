@@ -1,0 +1,38 @@
+/* ──────────────────────────────────────────────────────────────
+   Global theme + tiny CSS reset.
+   The colour palette is shared across every page via these
+   CSS variables; individual page stylesheets reference them
+   as var(--color-ink), var(--color-teal), etc.
+   ────────────────────────────────────────────────────────────── */
+
+:root {
+    --color-ink: #011627;        /* near-black navy — primary text */
+    --color-teal: #41EAD4;       /* mint accent */
+    --color-amber: #FF9F1C;      /* warm orange accent (stars, CTAs) */
+    --color-red: #E71D36;        /* logo accent + logout */
+    --color-porcelain: #FDFFFC;  /* page background, off-white */
+}
+
+/* Minimal reset so the layout is predictable */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: var(--color-porcelain);
+    color: var(--color-ink);
+    font-family: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Buttons inherit the default OS look in Chrome/Safari — strip it */
+button {
+    font-family: inherit;
+}
