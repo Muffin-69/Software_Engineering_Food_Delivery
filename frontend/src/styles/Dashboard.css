@@ -333,3 +333,71 @@
 .star--filled {
     color: var(--color-amber);
 }
+
+/* ── Tag filter chip row (above cards) ── */
+.tag-filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0 28px 16px;
+}
+
+/* ── Tag chips (shared base) ── */
+.tag-chip {
+    display: inline-flex;
+    align-items: center;
+    font-family: "DM Sans", sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    text-transform: lowercase;
+    border-radius: 14px;
+    padding: 4px 10px;
+    cursor: default;
+    white-space: nowrap;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+/* Filter-row variant: clickable, looks like a button */
+.tag-chip--filter {
+    cursor: pointer;
+    background: transparent;
+    border: 1px solid rgba(1, 22, 39, 0.15);
+    color: rgba(1, 22, 39, 0.6);
+    padding: 6px 14px;
+    font-size: 12px;
+    font-family: "DM Sans", sans-serif;
+}
+
+.tag-chip--filter:hover {
+    border-color: rgba(65, 234, 212, 0.6);
+    color: var(--color-ink);
+}
+
+.tag-chip--active {
+    background: var(--color-teal);
+    border-color: var(--color-teal);
+    color: var(--color-ink);
+    font-weight: 600;
+}
+
+/* On-card variant: small, soft, non-interactive */
+.tag-chip--card {
+    background: rgba(65, 234, 212, 0.16);
+    color: rgba(1, 22, 39, 0.7);
+    border: none;
+}
+
+/* Card meta row holds stars + tag chips side by side */
+.card-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
