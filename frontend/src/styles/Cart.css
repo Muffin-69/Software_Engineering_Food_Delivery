@@ -1,0 +1,231 @@
+/* ──────────────────────────────────────────────────────────────
+   Cart + Order Confirmation styles
+   Layout shell (sidebar, blobs, topbar) is reused from
+   Dashboard.css. Some controls (.qty-control, .cart-cta, etc.)
+   are reused from Restaurant.css. This file only adds the bits
+   that are unique to these two pages.
+   ────────────────────────────────────────────────────────────── */
+
+/* ── Header for Cart page ── */
+.cart-header {
+    padding: 0 28px 16px;
+}
+
+.cart-title {
+    font-family: "Playfair Display", serif;
+    font-style: italic;
+    font-weight: 700;
+    font-size: 28px;
+    color: var(--color-ink);
+    margin: 0 0 4px;
+}
+
+.cart-subtitle {
+    font-size: 13px;
+    color: rgba(1, 22, 39, 0.55);
+    font-style: italic;
+    font-weight: 300;
+    margin: 0;
+}
+
+/* ── Empty cart state ── */
+.cart-empty {
+    padding: 40px 28px;
+    color: rgba(1, 22, 39, 0.5);
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+}
+
+/* ── Line items list ── */
+.cart-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 0 28px 8px;
+}
+
+.cart-line {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 16px;
+    background: rgba(1, 22, 39, 0.03);
+    border: 1px solid rgba(1, 22, 39, 0.08);
+    border-radius: 12px;
+    padding: 12px 18px;
+}
+
+.cart-line-info {
+    min-width: 0;
+}
+
+.cart-line-total {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-ink);
+    min-width: 64px;
+    text-align: right;
+}
+
+/* ── Sections (payment, totals) ── */
+.cart-section {
+    padding: 18px 28px;
+    border-top: 1px solid rgba(1, 22, 39, 0.08);
+    margin-top: 14px;
+}
+
+.section-heading {
+    font-family: "Playfair Display", serif;
+    font-style: italic;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--color-ink);
+    margin: 0 0 12px;
+}
+
+/* ── Payment radio rows ── */
+.payment-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid rgba(1, 22, 39, 0.08);
+    border-radius: 10px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--color-ink);
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.payment-row:hover {
+    border-color: rgba(65, 234, 212, 0.4);
+    background: rgba(65, 234, 212, 0.04);
+}
+
+.payment-row--disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.payment-row--disabled:hover {
+    border-color: rgba(1, 22, 39, 0.08);
+    background: transparent;
+}
+
+/* ── Totals rows ── */
+.totals-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 6px 0;
+    font-size: 13px;
+    color: rgba(1, 22, 39, 0.65);
+}
+
+.totals-row--grand {
+    border-top: 1px solid rgba(1, 22, 39, 0.1);
+    padding-top: 12px;
+    margin-top: 6px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-ink);
+}
+
+/* ── Submit row ── */
+.cart-submit-row {
+    padding: 8px 28px 40px;
+}
+
+.cart-cta--full {
+    width: 100%;
+    padding: 12px 18px;
+    font-size: 14px;
+    border-radius: 12px;
+}
+
+.cart-cta--full:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   Order Confirmation page
+   ────────────────────────────────────────────────────────────── */
+.confirmation-card {
+    margin: 60px auto;
+    max-width: 460px;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(1, 22, 39, 0.08);
+    border-radius: 18px;
+    padding: 36px 32px;
+    text-align: center;
+    box-shadow: 0 12px 32px rgba(1, 22, 39, 0.06);
+    backdrop-filter: blur(4px);
+}
+
+.confirmation-checkmark {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(65, 234, 212, 0.18);
+    color: var(--color-ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.confirmation-title {
+    font-family: "Playfair Display", serif;
+    font-style: italic;
+    font-weight: 700;
+    font-size: 26px;
+    color: var(--color-ink);
+    margin: 0 0 6px;
+}
+
+.confirmation-sub {
+    font-size: 13px;
+    color: rgba(1, 22, 39, 0.55);
+    font-weight: 300;
+    margin: 0 0 22px;
+}
+
+.confirmation-details {
+    text-align: left;
+    background: rgba(1, 22, 39, 0.03);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 22px;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    font-size: 13px;
+    color: rgba(1, 22, 39, 0.65);
+}
+
+.detail-row strong {
+    color: var(--color-ink);
+    font-weight: 600;
+}
+
+.status-badge {
+    background: rgba(255, 159, 28, 0.18);
+    color: var(--color-amber, #ff9f1c);
+    border-radius: 10px;
+    padding: 3px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}

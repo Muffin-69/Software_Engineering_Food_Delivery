@@ -1,0 +1,259 @@
+/* ──────────────────────────────────────────────────────────────
+   Owner / menu-edit page styles
+   Layout shell (sidebar, blobs, topbar) is reused from
+   Dashboard.css. .cart-cta and .add-btn come from Restaurant.css.
+   This file adds only the form-and-row bits that are unique here.
+   ────────────────────────────────────────────────────────────── */
+
+/* ── Owner-mode badge in the topbar ── */
+.owner-badge {
+    background: rgba(255, 159, 28, 0.18);
+    color: var(--color-amber, #ff9f1c);
+    border-radius: 12px;
+    padding: 4px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-family: "DM Sans", sans-serif;
+}
+
+/* ── Restaurant picker row ── */
+.owner-picker-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 28px 16px;
+}
+
+.owner-select {
+    background: rgba(1, 22, 39, 0.04);
+    border: 1px solid rgba(1, 22, 39, 0.12);
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-family: "DM Sans", sans-serif;
+    color: var(--color-ink);
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.owner-select:hover,
+.owner-select:focus {
+    border-color: var(--color-teal);
+    background: rgba(65, 234, 212, 0.07);
+}
+
+/* ── Sections ── */
+.owner-section {
+    padding: 18px 28px;
+    border-top: 1px solid rgba(1, 22, 39, 0.08);
+}
+
+.owner-section-title {
+    font-family: "Playfair Display", serif;
+    font-style: italic;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--color-ink);
+    margin: 0 0 14px;
+}
+
+/* ── Form fields ── */
+.owner-field {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 12px;
+    max-width: 560px;
+}
+
+.owner-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(1, 22, 39, 0.7);
+    margin-bottom: 6px;
+    font-family: "DM Sans", sans-serif;
+}
+
+.owner-hint {
+    font-size: 11px;
+    color: rgba(1, 22, 39, 0.4);
+    font-weight: 400;
+    font-style: italic;
+}
+
+.owner-input {
+    background: rgba(1, 22, 39, 0.04);
+    border: 1px solid rgba(1, 22, 39, 0.12);
+    border-radius: 10px;
+    padding: 9px 14px;
+    font-size: 13px;
+    font-family: "DM Sans", sans-serif;
+    color: var(--color-ink);
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.2s, background 0.2s;
+    width: 100%;
+}
+
+.owner-input:focus {
+    border-color: var(--color-teal);
+    background: rgba(65, 234, 212, 0.07);
+}
+
+.owner-textarea {
+    resize: vertical;
+    min-height: 60px;
+    font-family: "DM Sans", sans-serif;
+}
+
+.owner-actions-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-top: 4px;
+}
+
+.owner-saved {
+    font-size: 12px;
+    color: var(--color-teal);
+    font-weight: 500;
+}
+
+/* ── Banners ── */
+.owner-banner {
+    margin: 0 28px 8px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-family: "DM Sans", sans-serif;
+}
+
+.owner-banner--error {
+    background: rgba(231, 29, 54, 0.1);
+    color: var(--color-red, #e71d36);
+    border: 1px solid rgba(231, 29, 54, 0.3);
+}
+
+/* ── Dish edit list ── */
+.dish-edit-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.dish-edit-row,
+.dish-add-row {
+    display: grid;
+    grid-template-columns: 1fr 130px auto auto;
+    align-items: center;
+    gap: 10px;
+    background: rgba(1, 22, 39, 0.03);
+    border: 1px solid rgba(1, 22, 39, 0.08);
+    border-radius: 12px;
+    padding: 8px 14px;
+}
+
+.dish-add-row {
+    grid-template-columns: 1fr 130px auto;
+    border-style: dashed;
+    background: transparent;
+}
+
+.dish-edit-name {
+    /* fills the 1fr column — overrides the 100% width */
+    width: 100%;
+}
+
+.dish-edit-price-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.owner-currency {
+    position: absolute;
+    left: 12px;
+    color: rgba(1, 22, 39, 0.5);
+    font-size: 13px;
+    pointer-events: none;
+}
+
+.dish-edit-price {
+    padding-left: 24px;
+    text-align: right;
+}
+
+.dish-edit-save {
+    padding: 7px 14px;
+    font-size: 12px;
+    border-radius: 10px;
+}
+
+.dish-edit-save:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.dish-delete-btn {
+    background: transparent;
+    border: 1px solid rgba(1, 22, 39, 0.12);
+    color: rgba(1, 22, 39, 0.5);
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    font-family: "DM Sans", sans-serif;
+}
+
+.dish-delete-btn:hover:not(:disabled) {
+    background: rgba(231, 29, 54, 0.08);
+    border-color: rgba(231, 29, 54, 0.4);
+    color: var(--color-red, #e71d36);
+}
+
+.dish-delete-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.dish-add-btn {
+    padding: 8px 16px;
+    font-size: 12px;
+}
+
+.dish-add-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ── Danger / reset section ── */
+.owner-danger {
+    margin-bottom: 60px;
+}
+
+.owner-danger-btn {
+    background: transparent;
+    border: 1px solid rgba(231, 29, 54, 0.4);
+    color: var(--color-red, #e71d36);
+    border-radius: 10px;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: "DM Sans", sans-serif;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.owner-danger-btn:hover {
+    background: rgba(231, 29, 54, 0.08);
+}

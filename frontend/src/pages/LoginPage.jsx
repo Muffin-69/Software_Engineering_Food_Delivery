@@ -1,15 +1,33 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { login } from "../data/authApi";
 import "../styles/Auth.css";
 
-export default function Login() {
-  const navigate = useNavigate();
+/* ──────────────────────────────────────────────────────────────
+   Login page
+   Calls authApi.login() and notifies the parent (App.tsx) via
+   onLogin(user) when a session is established.
+   ────────────────────────────────────────────────────────────── */
+
+export default function Login({ onLogin, onGoToSignUp, onBack }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [focused, setFocused] = useState(null);
+  const [error, setError] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleLogin = () => {
-    console.log({ email, password });
+  const handleLogin = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (submitting) return;
+    setError(null);
+    setSubmitting(true);
+    try {
+      const user = await login(email, password);
+      onLogin(user);
+    } catch (err) {
+      setError(err && err.message ? err.message : "Could not log in.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -18,7 +36,7 @@ export default function Login() {
       <div className="bg-blob bg-blob--amber" />
 
       <header className="auth-header">
-        <div className="logo">
+        <div className="logo" onClick={onBack} style={{ cursor: "pointer" }}>
           Eat<span className="logo__accent">out!</span>
         </div>
         <div className="auth-dot">Log in</div>
@@ -49,7 +67,7 @@ export default function Login() {
           <span className="amber-dot" />
         </p>
 
-        <div className="auth-form">
+        <form className="auth-form" onSubmit={handleLogin}>
           {[
             {
               id: "email",
@@ -87,13 +105,35 @@ export default function Login() {
             </div>
           ))}
 
-          <button className="auth-btn" onClick={handleLogin}>
-            Log in
+          {error && (
+            <div
+              style={{
+                fontSize: 12,
+                color: "#e71d36",
+                background: "rgba(231,29,54,0.08)",
+                border: "1px solid rgba(231,29,54,0.25)",
+                borderRadius: 8,
+                padding: "8px 10px",
+              }}
+            >
+              {error}
+            </div>
+          )}
+
+          <button
+            className="auth-btn"
+            type="submit"
+            disabled={submitting}
+          >
+            {submitting ? "Logging in…" : "Log in"}
           </button>
-        </div>
+        </form>
 
         <div className="footer-links">
-          <a className="footer-link" onClick={() => navigate("/signup")}>
+          <a className="footer-link" onClick={onBack}>
+            ← Back
+          </a>
+          <a className="footer-link" onClick={onGoToSignUp}>
             Don't have an account? Sign Up
           </a>
         </div>
